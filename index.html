@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Question and Answer Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    #answer { display: none; white-space: pre-wrap; }
+    #grades { margin-left: 166px; margin-top: 4px }
+    #question, #answer { margin-bottom: 1rem; white-space: pre-wrap; }
+    #controls { margin-top: 1rem; }
+    textarea { width: 100%; height: 150px; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>QA Viewer</h1>
+  <div id="viewer" style="display:none">
+    <div id="controls">
+      <button onclick="prevEntry()">Prev</button>
+      <input type="number" id="goTo" min="1" style="width: 60px;" onchange="goToEntry()">
+      <button onclick="nextEntry()">Next</button>
+      <button onclick="toggleAnswer()">Toggle Answer</button>
+      <button onclick="randomEntry()">Random</button>
+      <button onclick="resetSeen()">Reset Seen</button>
+    </div>
+    <div id="grades">
+      <input id="rightCount" min="0" style="width: 45px;" disabled><button onclick="addRight()">✅</button>
+      <input id="wrongCount" max="0" style="width: 45px;" disabled><button onclick="addWrong()">❌</button>
+      <button onclick="clearScore()">Clear Score</button>
+      <span id="total"></span>
+      (<span id="score"></span>)
+    </div>
+    <h2>Question <span id="currentIndex">1</span></h2>
+    <div id="question"></div>
+    <div id="answer"></div>
+  </div>
+
+  <script src="./questionsAnswers.js"></script>
+  <script>
+    let r_asked = [], currentIndex = 0, right = 0, wrong = 0;
+
+    function showEntry(index) {
+      currentIndex = index;
+      const answer = answers[index] || '[No answer - end of file]';
+      // document.getElementById('question').style.color = hasAnswer(answer) ? 'black' : 'red';
+
+      document.getElementById('viewer').style.display = 'block';
+      document.getElementById('currentIndex').textContent = index + 1;
+      document.getElementById('question').textContent = questions[index] || '[No question]';
+      document.getElementById('answer').textContent = answer;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('goTo').value = index + 1;
+    }
+
+    function toggleAnswer() {
+      const a = document.getElementById('answer');
+      a.style.display = a.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function nextEntry() {
+      if (currentIndex < questions.length - 1) showEntry(currentIndex + 1);
+    }
+
+    function prevEntry() {
+      if (currentIndex > 0) showEntry(currentIndex - 1);
+    }
+
+    function goToEntry() {
+      const idx = parseInt(document.getElementById('goTo').value, 10) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < questions.length) {
+        showEntry(idx);
+      }
+    }
+
+    function randomEntry() {
+      const firstIdx = Math.floor(Math.random() * questions.length);
+      let idx = firstIdx;
+      const asked = JSON.parse(localStorage.getItem('asked')) || [];
+      do {
+        idx = (idx + 1) % questions.length;
+      } while (asked.includes(idx) && idx != firstIdx);
+
+      if (idx === firstIdx && asked.includes(idx)) {
+        alert("You've seen every question!");
+      } else {
+        asked.push(idx);
+        localStorage.setItem('asked', JSON.stringify(asked));
+      }
+      showEntry(idx);
+    }
+
+    function clearScore() {
+      localStorage.removeItem('right');
+      localStorage.removeItem('wrong');
+      updateResponses();
+    }
+
+    function resetSeen() {
+      if (confirm('Are you sure you want to clear the seen list?')) {
+        localStorage.removeItem('asked');
+      }
+    }
+
+    function addRight() {
+      let right = localStorage.getItem('right') || 0;
+      right++;
+      localStorage.setItem('right', right);
+      updateResponses();
+    }
+
+    function addWrong() {
+      let wrong = localStorage.getItem('wrong') || 0;
+      wrong++;
+      localStorage.setItem('wrong', wrong);
+      updateResponses();
+    }
+
+    function updateResponses() {
+      const right = Number(localStorage.getItem('right')) || 0;
+      const wrong = Number(localStorage.getItem('wrong')) || 0;
+      const total = wrong+right;
+      document.getElementById('total').textContent = total;
+      document.getElementById('rightCount').value = right;
+      document.getElementById('wrongCount').value = `-${wrong}`;
+      document.getElementById('score').textContent = `${Math.floor((right / (total))* 1000) / 10 || 0}%`;
+    }
+
+    showEntry(0);
+    updateResponses();
+  </script>
+</body>
+</html>
+
+
