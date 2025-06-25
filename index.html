@@ -37,10 +37,18 @@
 
   <script src="./questionsAnswers.js"></script>
   <script>
-    let r_asked = [], currentIndex = 0, right = 0, wrong = 0;
+    let r_asked = [], currentIndex = 0;
+
+    function start() {
+      let lastQ = Number(localStorage.getItem('lastQ') || 0);
+      updateResponses();
+      showEntry(lastQ);
+    }
+
 
     function showEntry(index) {
       currentIndex = index;
+      localStorage.setItem('lastQ', index);
       const answer = answers[index] || '[No answer - end of file]';
       // document.getElementById('question').style.color = hasAnswer(answer) ? 'black' : 'red';
 
@@ -125,8 +133,7 @@
       document.getElementById('score').textContent = `${Math.floor((right / (total))* 1000) / 10 || 0}%`;
     }
 
-    showEntry(0);
-    updateResponses();
+    start();
   </script>
 </body>
 </html>
